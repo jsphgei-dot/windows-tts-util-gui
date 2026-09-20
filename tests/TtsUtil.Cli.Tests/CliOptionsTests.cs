@@ -1,3 +1,4 @@
+using TtsUtil.Core.Audio;
 using TtsUtil.Core.Text;
 using Xunit;
 
@@ -118,6 +119,45 @@ public sealed class CliOptionsTests
     public void AnOptionNobodyRecognizesIsRefused()
     {
         Assert.Equal("Unknown option --sideways.", CliOptions.Parse(new[] { "say", "--sideways" }).Error);
+    }
+
+    [Theory]
+    [InlineData("wav", AudioOutputFormat.Wav)]
+    [InlineData("MP3", AudioOutputFormat.Mp3)]
+    public void TheFormatNamesMapOntoTheFileTypes(string given, AudioOutputFormat expected)
+    {
+        Assert.Equal(expected, CliOptions.Parse(new[] { "say", "--format", given }).Format);
+    }
+
+    [Fact]
+    public void AFormatNobodyRecognizesIsRefused()
+    {
+        Assert.Equal("--format takes wav or mp3, not \"flac\".",
+            CliOptions.Parse(new[] { "say", "--format", "flac" }).Error);
+    }
+
+    [Fact]
+    public void ABitRateIsReadInKbpsAndHeldToWhatMp3Allows()
+    {
+        Assert.Equal(192, CliOptions.Parse(new[] { "say", "--bitrate", "192" }).BitRate);
+        Assert.Equal("--bitrate has to be between 8 and 320 kbps.",
+            CliOptions.Parse(new[] { "say", "--bitrate", "128000" }).Error);
+    }
+
+    [Fact]
+    public void TheSoundCardCanBeNamed()
+    {
+        Assert.Equal("hw:1,0", CliOptions.Parse(new[] { "say", "-a", "hw:1,0" }).Device);
+    }
+
+    [Fact]
+    public void NothingIsAssumedAboutTheFileTypeUntilItIsAsked()
+    {
+        var options = CliOptions.Parse(new[] { "say", "hello" });
+
+        Assert.Null(options.Format);
+        Assert.Null(options.BitRate);
+        Assert.Null(options.Device);
     }
 
     [Fact]

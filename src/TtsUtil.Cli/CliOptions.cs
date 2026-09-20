@@ -5,6 +5,7 @@
  */
 
 using System.Globalization;
+using TtsUtil.Core.Audio;
 using TtsUtil.Core.Text;
 
 namespace TtsUtil.Cli;
@@ -32,6 +33,15 @@ internal sealed class CliOptions
     public string? VoicesDirectory { get; private set; }
 
     public SpokenCharacterPolicy? Filter { get; private set; }
+
+    /// <summary>The file type to write, or null to take it from the name of the output file.</summary>
+    public AudioOutputFormat? Format { get; private set; }
+
+    /// <summary>MP3 bit rate in kbps.</summary>
+    public int? BitRate { get; private set; }
+
+    /// <summary>The sound card to play through, when the default is not the one wanted.</summary>
+    public string? Device { get; private set; }
 
     /// <summary>Whether progress is kept off standard error.</summary>
     public bool Quiet { get; private set; }
@@ -78,7 +88,8 @@ internal sealed class CliOptions
     private static readonly HashSet<string> TakesAValue = new(StringComparer.Ordinal)
     {
         "-o", "--out", "-n", "--voice", "-d", "--voices", "-s", "--speaker",
-        "-t", "--threads", "-r", "--speed", "-f", "--filter",
+        "-t", "--threads", "-r", "--speed", "-f", "--filter", "-c", "--format",
+        "-b", "--bitrate", "-a", "--device",
     };
 
     /// <summary>Reads one switch and whatever value it takes, moving the index past both.</summary>
@@ -140,6 +151,18 @@ internal sealed class CliOptions
             case "-f":
             case "--filter":
                 return ReadFilter(value);
+            case "-c":
+            case "--format":
+                return ReadFormat(value);
+            case "-a":
+            case "--device":
+                Device = value;
+                return true;
+            case "-b":
+            case "--bitrate":
+                if (!ReadInt(name, value, rate => BitRate = rate)) return false;
+                if (BitRate < 8 || BitRate > 320) return Fail("--bitrate has to be between 8 and 320 kbps.");
+                return true;
             default:
                 return Fail($"Unknown option {name}.");
         }
@@ -166,6 +189,21 @@ internal sealed class CliOptions
         if (parsed < 0) return Fail($"{name} cannot be negative.");
         set(parsed);
         return true;
+    }
+
+    private bool ReadFormat(string value)
+    {
+        switch (value.ToLowerInvariant())
+        {
+            case "wav":
+                Format = AudioOutputFormat.Wav;
+                return true;
+            case "mp3":
+                Format = AudioOutputFormat.Mp3;
+                return true;
+            default:
+                return Fail($"--format takes wav or mp3, not \"{value}\".");
+        }
     }
 
     private bool ReadFilter(string value)

@@ -1,4 +1,6 @@
 using System.Text;
+using TtsUtil.Cli.Audio;
+using TtsUtil.Core.Audio;
 using TtsUtil.Core.Settings;
 using TtsUtil.Core.Tts;
 using Xunit;
@@ -12,6 +14,7 @@ public sealed class CliRunnerTests : IDisposable
     private readonly MemoryStream _piped = new();
     private readonly string _root;
     private readonly FakeEngine _engine = new();
+    private readonly FakePlayback _playback = new();
 
     public CliRunnerTests()
     {
@@ -82,10 +85,46 @@ public sealed class CliRunnerTests : IDisposable
     // --- say ---
 
     [Fact]
-    public void SayingSomethingWithNowhereToPutItSaysSo()
+    public void SayingSomethingWithNoFileNamedPlaysItOutLoud()
     {
-        Assert.Equal(ExitCodes.Usage, Run("say", "hello there"));
-        Assert.Contains("Playing out loud is not built yet.", _error.ToString());
+        Assert.Equal(ExitCodes.Ok, Run("say", "Hello there."));
+
+        Assert.NotEmpty(_playback.Written);
+        Assert.True(_playback.Drained);
+        Assert.Contains("Done.", _error.ToString());
+    }
+
+    [Fact]
+    public void TheCardToPlayThroughCanBeNamedOnTheLine()
+    {
+        Run("say", "Hello there.", "--device", "hw:1,0");
+
+        Assert.Equal("hw:1,0", _playback.Device);
+        Assert.Equal(16000, _playback.SampleRate);
+    }
+
+    [Fact]
+    public void AMachineWithNoSoundCardSaysSoRatherThanFallingOver()
+    {
+        var runner = NewRunner();
+        runner.PlaybackFactory = (_, _, _) =>
+            throw new InvalidOperationException("No ALSA on this machine.");
+
+        Assert.Equal(ExitCodes.Failed, runner.Run(new[] { "say", "Hello there." }));
+        Assert.Contains("No ALSA on this machine.", _error.ToString());
+    }
+
+    [Fact]
+    public void StoppingAPlayingRunSaysSoAndReportsAFailure()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        var runner = NewRunner();
+        runner.Cancellation = cancellation.Token;
+
+        Assert.Equal(ExitCodes.Failed, runner.Run(new[] { "say", "Hello there." }));
+        Assert.Contains("Stopped.", _error.ToString());
     }
 
     [Fact]
@@ -258,6 +297,50 @@ public sealed class CliRunnerTests : IDisposable
         Assert.Contains("convert needs -o", _error.ToString());
     }
 
+    // --- what gets written ---
+
+    [Theory]
+    [InlineData("out.wav", null, AudioOutputFormat.Wav)]
+    [InlineData("out.mp3", null, AudioOutputFormat.Mp3)]
+    [InlineData("OUT.MP3", null, AudioOutputFormat.Mp3)]
+    [InlineData("out.wav", "mp3", AudioOutputFormat.Mp3)]
+    [InlineData("out.mp3", "wav", AudioOutputFormat.Wav)]
+    [InlineData("recording", null, AudioOutputFormat.Wav)]
+    [InlineData("-", null, AudioOutputFormat.Wav)]
+    [InlineData("-", "mp3", AudioOutputFormat.Mp3)]
+    public void TheFileTypeComesFromTheNameUnlessItIsAskedFor(string output, string? format,
+        AudioOutputFormat expected)
+    {
+        var args = format is null
+            ? new[] { "say", "hello", "-o", output }
+            : new[] { "say", "hello", "-o", output, "--format", format };
+
+        Assert.Equal(expected, CliRunner.ChosenFormat(CliOptions.Parse(args)));
+    }
+
+    [Fact]
+    public void AnMp3IsEncodedWhenLameIsInstalledAndRefusedPlainlyWhenItIsNot()
+    {
+        var path = Path.Combine(_root, "out.mp3");
+        var exit = Run("say", "Hello there.", "-o", path);
+
+        if (!LameMp3Sink.IsAvailable)
+        {
+            Assert.Equal(ExitCodes.Failed, exit);
+            Assert.Contains("MP3 needs the LAME library.", _error.ToString());
+            Assert.False(File.Exists(path));
+            return;
+        }
+
+        Assert.Equal(ExitCodes.Ok, exit);
+
+        // Every MPEG audio frame opens with eleven set bits.
+        var bytes = File.ReadAllBytes(path);
+        Assert.True(bytes.Length > 0);
+        Assert.Equal(0xff, bytes[0]);
+        Assert.Equal(0xe0, bytes[1] & 0xe0);
+    }
+
     [Fact]
     public void AFolderThatIsNotThereYetIsMadeForTheOutput()
     {
@@ -273,6 +356,12 @@ public sealed class CliRunnerTests : IDisposable
 
     private CliRunner NewRunner() => new(_out, _error)
     {
+        PlaybackFactory = (rate, device, _) =>
+        {
+            _playback.SampleRate = rate;
+            _playback.Device = device;
+            return _playback;
+        },
         EngineLoader = (voice, threads) =>
         {
             _engine.LoadedVoice = voice.Name;
@@ -302,6 +391,46 @@ public sealed class CliRunnerTests : IDisposable
             Name = "Brian", Language = "en-GB", Kind = VoiceModelKind.Vits, Source = VoiceSource.Sherpa,
         },
     };
+
+    /// <summary>A sound card that keeps what it was played.</summary>
+    private sealed class FakePlayback : IAudioPlayback
+    {
+        public List<float> Written { get; } = new();
+
+        public int SampleRate { get; set; }
+
+        public string? Device { get; set; }
+
+        public bool Drained { get; private set; }
+
+        public bool IsPaused => false;
+
+        public long PlayedCharacters => 0;
+
+        public void Pause()
+        {
+        }
+
+        public void Resume()
+        {
+        }
+
+        public void Stop()
+        {
+        }
+
+        public void WaitUntilDrained() => Drained = true;
+
+        public void WriteSamples(ReadOnlySpan<float> samples) => Written.AddRange(samples.ToArray());
+
+        public void WriteSilence(int milliseconds)
+        {
+        }
+
+        public void Dispose()
+        {
+        }
+    }
 
     /// <summary>A voice that produces a tenth of a second per utterance and remembers what it was
     /// asked to say.</summary>

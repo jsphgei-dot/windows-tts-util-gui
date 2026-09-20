@@ -4,7 +4,9 @@
  * Licensed under the Apache License, Version 2.0.
  */
 
+using TtsUtil.Cli.Audio;
 using TtsUtil.Core;
+using TtsUtil.Core.Audio;
 using TtsUtil.Core.Settings;
 using TtsUtil.Core.Text;
 using TtsUtil.Core.Tts;
@@ -46,6 +48,12 @@ internal sealed class CliRunner
 
     /// <summary>Opens standard output for the audio when the output is a single dash.</summary>
     public Func<Stream> StandardOutputStream { get; set; } = Console.OpenStandardOutput;
+
+    /// <summary>Opens the sound card. Replaced in tests, which have none.</summary>
+    public Func<int, string?, CancellationToken, IAudioPlayback> PlaybackFactory { get; set; } = OpenSoundCard;
+
+    /// <summary>Cancels the run, which the program wires to Ctrl and C.</summary>
+    public CancellationToken Cancellation { get; set; } = CancellationToken.None;
 
     public int Run(IReadOnlyList<string> args)
     {
@@ -176,12 +184,6 @@ internal sealed class CliRunner
     {
         if (readerFactory is null) return ExitCodes.Usage;
 
-        if (options.Output is null)
-        {
-            _error.WriteLine("Playing out loud is not built yet. Give -o <file>, or -o - to pipe the audio.");
-            return ExitCodes.Usage;
-        }
-
         var settings = Settings ??= AppSettings.Load();
         var voice = ChooseVoice(options, settings);
         if (voice is null) return ExitCodes.Failed;
@@ -201,7 +203,15 @@ internal sealed class CliRunner
         var total = TextMeasure.CountCharacters(readerFactory);
         using var reader = readerFactory();
 
-        WriteAudio(options, engine, runner, reader, total);
+        try
+        {
+            WriteAudio(options, engine, runner, reader, total);
+        }
+        catch (OperationCanceledException)
+        {
+            _error.WriteLine("Stopped.");
+            return ExitCodes.Failed;
+        }
 
         if (runner.UtterancesSpoken == 0 && total > 0)
         {
@@ -218,18 +228,75 @@ internal sealed class CliRunner
     {
         var progress = options.Quiet ? null : new Progress<SynthesisProgress>(ReportProgress);
 
-        if (options.OutputIsStandardOut)
+        // Checked before anything is opened, so a refused format leaves no empty file behind.
+        if (ChosenFormat(options) == AudioOutputFormat.Mp3 && !LameMp3Sink.IsAvailable)
         {
-            using var sink = new StreamWaveSink(StandardOutputStream(), engine.SampleRate);
-            runner.Run(reader, total, sink, progress);
+            throw new InvalidOperationException(
+                "MP3 needs the LAME library. Install libmp3lame, or write a WAV with --format wav.");
+        }
+
+        if (options.Output is null)
+        {
+            using var playback = PlaybackFactory(engine.SampleRate, options.Device, Cancellation);
+            runner.Run(reader, total, playback, progress, Cancellation);
+            playback.WaitUntilDrained();
             return;
         }
 
-        var folder = Path.GetDirectoryName(Path.GetFullPath(options.Output!));
+        if (options.OutputIsStandardOut)
+        {
+            using var piped = CreateSink(options, StandardOutputStream(), engine.SampleRate);
+            runner.Run(reader, total, piped, progress, Cancellation);
+            return;
+        }
+
+        var folder = Path.GetDirectoryName(Path.GetFullPath(options.Output));
         if (folder is not null) Directory.CreateDirectory(folder);
 
-        using var file = new WaveFileSink(options.Output!, engine.SampleRate);
-        runner.Run(reader, total, file, progress);
+        var stream = new FileStream(options.Output, FileMode.Create, FileAccess.Write, FileShare.Read);
+        using var file = CreateSink(options, stream, engine.SampleRate);
+        runner.Run(reader, total, file, progress, Cancellation);
+    }
+
+    /// <summary>Picks the encoder from --format, or from the name of the file when none was given.</summary>
+    private IDisposableSink CreateSink(CliOptions options, Stream stream, int sampleRate)
+    {
+        if (ChosenFormat(options) != AudioOutputFormat.Mp3) return new StreamWaveSink(stream, sampleRate);
+
+        var bitRate = options.BitRate is int kbps ? kbps * 1000 : (Settings ??= AppSettings.Load()).Mp3BitRate;
+        return new LameMp3Sink(stream, sampleRate, bitRate);
+    }
+
+    /// <summary>The file type asked for, or the one the name of the output file implies.</summary>
+    internal static AudioOutputFormat ChosenFormat(CliOptions options)
+    {
+        if (options.Format is AudioOutputFormat given) return given;
+
+        var extension = options.OutputIsStandardOut
+            ? string.Empty
+            : Path.GetExtension(options.Output ?? string.Empty);
+
+        return extension.Equals(".mp3", StringComparison.OrdinalIgnoreCase)
+            ? AudioOutputFormat.Mp3
+            : AudioOutputFormat.Wav;
+    }
+
+    /// <summary>Opens ALSA, the one backend built in, and says plainly when it cannot.</summary>
+    private static IAudioPlayback OpenSoundCard(int sampleRate, string? device, CancellationToken cancellation)
+    {
+        if (!AlsaPcmDevice.IsAvailable)
+        {
+            throw new InvalidOperationException(OperatingSystem.IsLinux()
+                ? "No ALSA on this machine. Install libasound2, or pipe the audio with -o - into a player."
+                : "Playing out loud needs ALSA, so on this system write a file or pipe it with -o -.");
+        }
+
+        if (!AlsaPcmDevice.TryOpen(sampleRate, device, out var opened, out var error))
+        {
+            throw new InvalidOperationException(error);
+        }
+
+        return new PcmPlayback(opened!, sampleRate, cancellation);
     }
 
     private void Report(CliOptions options, SynthesisRunner runner)
@@ -240,7 +307,7 @@ internal sealed class CliRunner
             ? $", {runner.CharactersFiltered} character(s) filtered"
             : string.Empty;
 
-        _error.WriteLine(options.OutputIsStandardOut
+        _error.WriteLine(options.Output is null || options.OutputIsStandardOut
             ? $"Done{filtered}."
             : $"Wrote {options.Output}{filtered}.");
     }

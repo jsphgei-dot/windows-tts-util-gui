@@ -6,13 +6,12 @@
 
 using System.Text;
 using TtsUtil.Core.Audio;
-using TtsUtil.Core.Tts;
 
-namespace TtsUtil.Cli;
+namespace TtsUtil.Cli.Audio;
 
 /// <summary>Writes 16 bit PCM to a stream that cannot be seeked, such as a pipe, by declaring the
 /// largest size a RIFF header can hold rather than going back to correct it.</summary>
-internal sealed class StreamWaveSink : ISampleSink, IDisposable
+internal sealed class StreamWaveSink : IDisposableSink
 {
     private const uint UnknownSize = 0xFFFFFFFF;
 
