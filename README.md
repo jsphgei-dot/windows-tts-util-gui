@@ -3,7 +3,7 @@
 ![version](https://img.shields.io/badge/version-0.12.0--beta-blue)
 ![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20%C2%B7%20x64%20%7C%20ARM64%20%7C%20x86-0078D6)
 ![built with](https://img.shields.io/badge/.NET-10.0-512BD4)
-![tests](https://img.shields.io/badge/tests-489%20passing-brightgreen)
+![tests](https://img.shields.io/badge/tests-531%20passing-brightgreen)
 ![license](https://img.shields.io/badge/license-Apache%202.0-lightgrey)
 
 > Read anything you can type, paste or open out loud, entirely on your own machine.
