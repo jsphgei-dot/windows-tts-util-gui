@@ -16,6 +16,7 @@ Usage:
   ttsutil read <file>               speak a .txt or .pdf out loud
   ttsutil convert <file> -o <file>  write a file to audio instead of playing
   ttsutil voices                    list the voices that are installed
+  ttsutil check                     what this machine is and what it can play
   ttsutil --version                 the build this is
   ttsutil --help                    this
 
@@ -39,5 +40,9 @@ Options:
   -q, --quiet          keep progress off standard error
 
 Settings come from the same settings.json the window uses, and a switch given
-here wins for this run without being written back.";
+here wins for this run without being written back.
+
+When a sound library is missing, ttsutil reads /etc/os-release to name the
+package your distribution calls it by. Nothing is sent anywhere. Set
+TTSUTIL_NO_SYSTEM_DETECT=1 to leave that file unread and get general advice.";
 }

@@ -327,7 +327,7 @@ public sealed class CliRunnerTests : IDisposable
         if (!LameMp3Sink.IsAvailable)
         {
             Assert.Equal(ExitCodes.Failed, exit);
-            Assert.Contains("MP3 needs LAME.", _error.ToString());
+            Assert.Contains("Writing an MP3 needs", _error.ToString());
             Assert.False(File.Exists(path));
             return;
         }
@@ -339,6 +339,22 @@ public sealed class CliRunnerTests : IDisposable
         Assert.True(bytes.Length > 0);
         Assert.Equal(0xff, bytes[0]);
         Assert.Equal(0xe0, bytes[1] & 0xe0);
+    }
+
+    [Fact]
+    public void CheckSaysWhatTheMachineIsAndWhetherItCanPlayAndEncode()
+    {
+        var runner = NewRunner();
+        runner.SystemProbe = () => OsRelease.Parse(new[] { "ID=fedora", "PRETTY_NAME=\"Fedora Linux 42\"" });
+        runner.LibraryProbe = name => name == "asound";
+
+        Assert.Equal(ExitCodes.Ok, runner.Run(new[] { "check", "--voices", _root }));
+
+        var printed = _out.ToString();
+        Assert.Contains("Fedora Linux 42", printed);
+        Assert.Contains("libasound.so.2 found", printed);
+        Assert.Contains("libmp3lame.so.0 not found", printed);
+        Assert.Contains($"2 in {_root}", printed);
     }
 
     [Fact]

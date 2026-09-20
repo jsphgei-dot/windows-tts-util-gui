@@ -55,6 +55,12 @@ internal sealed class CliRunner
     /// <summary>Cancels the run, which the program wires to Ctrl and C.</summary>
     public CancellationToken Cancellation { get; set; } = CancellationToken.None;
 
+    /// <summary>Whether a native library can be loaded here. Replaced in tests, which load none.</summary>
+    public Func<string, bool> LibraryProbe { get; set; } = NativeLibraries.CanLoad;
+
+    /// <summary>What the machine says it is, so the advice matches the system in front of you.</summary>
+    public Func<OsRelease> SystemProbe { get; set; } = OsRelease.Read;
+
     public int Run(IReadOnlyList<string> args)
     {
         var options = CliOptions.Parse(args);
@@ -92,6 +98,7 @@ internal sealed class CliRunner
     private int Dispatch(CliOptions options) => options.Command switch
     {
         "voices" => ListVoices(options),
+        "check" => Check(options),
         "say" => Speak(options, FromArguments(options)),
         "read" => Speak(options, FromFile(options)),
         "convert" => Convert(options),
@@ -122,6 +129,16 @@ internal sealed class CliRunner
             _out.WriteLine($"{voice.Name}\t{language}\t{voice.Kind}");
         }
 
+        return ExitCodes.Ok;
+    }
+
+    /// <summary>Says what this machine is and which of the audio libraries it has.</summary>
+    private int Check(CliOptions options)
+    {
+        foreach (var line in SoundLibraries.Report(SystemProbe(), LibraryProbe)) _out.WriteLine(line);
+
+        var directory = VoicesDirectory(options);
+        _out.WriteLine($"Voices    {VoiceScanner(directory).Count} in {directory}");
         return ExitCodes.Ok;
     }
 
@@ -231,8 +248,7 @@ internal sealed class CliRunner
         // Checked before anything is opened, so a refused format leaves no empty file behind.
         if (ChosenFormat(options) == AudioOutputFormat.Mp3 && !LameMp3Sink.IsAvailable)
         {
-            throw new InvalidOperationException(
-                "MP3 needs LAME. Install lame-libs on Fedora or libmp3lame0 on Debian, or use --format wav.");
+            throw new InvalidOperationException(SoundLibraries.EncoderMissing(SystemProbe()));
         }
 
         if (options.Output is null)
@@ -286,9 +302,7 @@ internal sealed class CliRunner
     {
         if (!AlsaPcmDevice.IsAvailable)
         {
-            throw new InvalidOperationException(OperatingSystem.IsLinux()
-                ? "No ALSA here. Install alsa-lib on Fedora or libasound2 on Debian, or pipe it with -o -."
-                : "Playing out loud needs ALSA, so on this system write a file or pipe it with -o -.");
+            throw new InvalidOperationException(SoundLibraries.PlaybackMissing(OsRelease.Read()));
         }
 
         if (!AlsaPcmDevice.TryOpen(sampleRate, device, out var opened, out var error))
