@@ -10,31 +10,25 @@
 
 ## ✨ Highlights
 
-* **Offline, always.** The voice runs locally. Nothing is uploaded, nothing is fetched while
-  you read, and no system speech engine is involved. It reaches the network twice only: to
-  download a voice you asked for, and for the update check on the way in, which sends nothing and
+* **Offline, always.** Your machine is responsible for running the entire generation, nothing is uploaded or downloaded to generate audio. It reaches the network for two purposes only: to
+  download a voice you asked for, and for the optional update check, which sends out nothing and
   can be switched off.
-* **Real neural voices.** Piper, Kokoro and Matcha models through
-  [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx), including one with over 900 speakers.
-* **Fast, and how fast is up to you.** The voice you pick decides the cost, and the range is
-  wide. On the desktop the figures were taken on, the heaviest neural voice renders 1.4x to 4.3x
-  faster than real time depending on the threads it is given, a lighter Piper voice manages
-  13.6x to 35.5x, and the three voices Windows already carries run between 372x and 592x.
-  Playback needs only 1.0x, so a lighter voice is what lets a modest machine stay ahead of the
-  listener, and what turns writing an MP3 of a long script into seconds rather than a wait. The
+* **Real neural voices.** Piper, Kokoro and Matcha models run through the
+  [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) engine locally, including one with over 900 speakers.
+* **Large library of voice models.** The voice you install in the app decides the speed, and the performance range is
+  wide. On my computer, the heaviest neural voice, [Kokoro](https://github.com/hexgrad/kokoro), renders 1.4x to 4.3x
+  faster than real time depending on how many threads were given in the settings, and a lighter [Piper](https://github.com/rhasspy/piper) voice manages
+  13.6x to 35.5x realtime speeds. The three voices Windows carries out of the box generate between 372x and 592x real time.
+  Playback needs only 1.0x (realtime), so a lighter voice is what will let weaker machines be able to still do heavy workloads, and it's what turns writing an MP3 of a long script into seconds rather than minutes. The
   [full measurements](docs/performance.md) cover every voice and thread count.
-* **Reads what a reader would read.** Symbols, links and stray punctuation are filtered out
+* **Reads however you want.** Symbols, links and stray punctuation will be filtered out as the default reading setting
   instead of being spoken as "dollar", "hash" and "https colon slash slash".
 * **Text, files, PDFs and scans.** Scanned pages go through the OCR already in Windows.
-* **Listen or keep it.** Play it back, or write the same input to an MP3 or a wave file.
-* **Queue and repeat.** Line up a run of scripts, loop one of them, or loop the lot.
-* **Batch conversion.** Tick several saved scripts and write them all to audio files at once.
-* **It keeps your place.** Every text tab is still there when you open the program again, audio
-  written from a script is offered that script's title as its file name, and the words behind a
-  recording are saved as a script under the name you gave the file.
-* **Each script remembers its voice.** Saving a script keeps the voice, the speaker and the
-  talking speed with it, and opening or converting it reads it back the way it sounded.
-* **Several texts at once.** New tab gives you another text window, and each one writes its audio
+* **Works anywhere, anytime.** Play it back on your PC, or write it to an MP3 and listen on your phone. Perfect for studying on the go.
+* **Queue and repeat.** Line up a run of saved texts (called scripts), loop one of them, or loop the whole list.
+* **Batch conversion.** Select several saved scripts and batch write them all to audio files so you can generate consecutive files unattended.
+* **It keeps your place.** Every text tab is still there when you open the program again.
+* **Batch audio generation while remaining usable.** New tab gives you another text window, and each one writes its audio
   in the background on a voice of its own, so you can set several recordings going and carry on
   reading in another tab.
 * **Installer or portable.** One build gives both, and the portable copy touches nothing
@@ -83,18 +77,9 @@ first page whether to install for all users (needs administrator) or just for yo
 (recommended, no prompt), then adds a Start menu entry, an optional desktop shortcut, and an
 entry in Settings, Apps. Settings go to `%APPDATA%\TtsUtilWin`.
 
-**No voice model has to be downloaded.** Windows already carries three Microsoft voices,
-Microsoft David, Microsoft Zira and Microsoft Mark, and the program speaks with them as they
-are. The installer's components page shows them at the top as ticked, greyed out rows, which
-say they are on the machine already and cost nothing to install. Everything under them is
-optional.
-
-The rest of that page lists the curated neural voices with a checkbox and a size each.
-"Program and the three recommended neural voices" ticks the permissively licensed defaults,
-"Program only, nothing downloaded" ticks none, and "Choose voices" leaves every box to you.
-Setup downloads what is ticked and extracts it into `voices` beside the program, skipping any
-model already present. A failed download warns and lets the installation finish. Uninstalling
-removes the voices it installed.
+**No voice model required.** Windows already carries three voices,
+David, Zira and Mark. The installer's components page shows them at the top as ticked, greyed
+out rows, meaning they are on the machine with no download needed. Neural voices are optional but recommended for a better experience.
 
 **Portable.** Copy the `TtsUtilWin` folder anywhere. The `portable.txt` file beside the
 executable keeps settings and voices inside that folder, so nothing touches your profile.
@@ -114,10 +99,8 @@ Saved scripts land in that same `scripts` folder, as plain `.txt` files.
 
 **Upgrading.** Setup recognizes an existing installation by its application id. A newer setup
 upgrades in place, keeping the folder, shortcuts, settings and the voices already downloaded.
-The same version offers a repair. An older setup warns that it would downgrade and asks for
-confirmation. A running copy is closed through the Restart Manager rather than failing on a
-locked file. There is no need to uninstall first. Only one architecture can be installed at a
-time, so a setup that finds another one already there offers to remove it first.
+The same version offers a repair. An older version warns that it would downgrade and asks for
+confirmation. Only one architecture can be installed at a time, so a setup that finds another one already there offers to remove it first.
 
 **Requirements.** Windows 10 or 11, on x64, ARM64 or x86. The published executable is self
 contained and needs no runtime installed. OCR of scanned PDFs uses the Windows OCR engine,
