@@ -232,7 +232,7 @@ internal sealed class CliRunner
         if (ChosenFormat(options) == AudioOutputFormat.Mp3 && !LameMp3Sink.IsAvailable)
         {
             throw new InvalidOperationException(
-                "MP3 needs the LAME library. Install libmp3lame, or write a WAV with --format wav.");
+                "MP3 needs LAME. Install lame-libs on Fedora or libmp3lame0 on Debian, or use --format wav.");
         }
 
         if (options.Output is null)
@@ -287,7 +287,7 @@ internal sealed class CliRunner
         if (!AlsaPcmDevice.IsAvailable)
         {
             throw new InvalidOperationException(OperatingSystem.IsLinux()
-                ? "No ALSA on this machine. Install libasound2, or pipe the audio with -o - into a player."
+                ? "No ALSA here. Install alsa-lib on Fedora or libasound2 on Debian, or pipe it with -o -."
                 : "Playing out loud needs ALSA, so on this system write a file or pipe it with -o -.");
         }
 

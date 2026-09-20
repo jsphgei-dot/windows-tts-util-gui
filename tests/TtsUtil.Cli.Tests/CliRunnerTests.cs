@@ -327,7 +327,7 @@ public sealed class CliRunnerTests : IDisposable
         if (!LameMp3Sink.IsAvailable)
         {
             Assert.Equal(ExitCodes.Failed, exit);
-            Assert.Contains("MP3 needs the LAME library.", _error.ToString());
+            Assert.Contains("MP3 needs LAME.", _error.ToString());
             Assert.False(File.Exists(path));
             return;
         }
