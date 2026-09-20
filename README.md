@@ -16,6 +16,13 @@
   can be switched off.
 * **Real neural voices.** Piper, Kokoro and Matcha models through
   [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx), including one with over 900 speakers.
+* **Fast, and how fast is up to you.** The voice you pick decides the cost, and the range is
+  wide. On the desktop the figures were taken on, the heaviest neural voice renders 1.4x to 4.3x
+  faster than real time depending on the threads it is given, a lighter Piper voice manages
+  13.6x to 35.5x, and the three voices Windows already carries run between 372x and 592x.
+  Playback needs only 1.0x, so a lighter voice is what lets a modest machine stay ahead of the
+  listener, and what turns writing an MP3 of a long script into seconds rather than a wait. The
+  [full measurements](docs/performance.md) cover every voice and thread count.
 * **Reads what a reader would read.** Symbols, links and stray punctuation are filtered out
   instead of being spoken as "dollar", "hash" and "https colon slash slash".
 * **Text, files, PDFs and scans.** Scanned pages go through the OCR already in Windows.
