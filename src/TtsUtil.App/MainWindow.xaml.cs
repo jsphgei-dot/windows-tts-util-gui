@@ -1014,7 +1014,11 @@ public partial class MainWindow : Window
         }
 
         var path = AudioPathPicker(AudioStem(ActiveScriptTitle));
-        if (path is null) return;
+        if (path is null)
+        {
+            SetStatus("No file was chosen, so nothing was written.");
+            return;
+        }
 
         KeepTextAsScript(text, path);
         PendingWork = WriteInBackgroundAsync(document, text, path);
@@ -1294,7 +1298,7 @@ public partial class MainWindow : Window
         }
 
         var suggested = ScriptTitleBox.Text.Trim();
-        if (suggested.Length == 0) suggested = ActiveScriptTitle ?? string.Empty;
+        if (suggested.Length == 0) suggested = ActiveScriptTitle ?? ActiveDocument?.Title ?? string.Empty;
 
         var chosen = (ScriptNamePrompt ?? AskForScriptName)(suggested);
         if (chosen is null)

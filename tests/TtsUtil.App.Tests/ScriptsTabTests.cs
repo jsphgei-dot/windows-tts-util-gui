@@ -163,6 +163,23 @@ public sealed class ScriptsTabTests : IDisposable
         });
     }
 
+    /// <summary>Backing out of the file box says so, rather than looking like a key that did nothing.</summary>
+    [Fact]
+    public void ClosingTheFileBoxSaysNothingWasWritten()
+    {
+        var window = CreateWindow();
+
+        _wpf.Invoke(() =>
+        {
+            window.AudioPathPicker = _ => null;
+            window.InputText.Text = "The words behind it.";
+
+            ApplicationCommands.SaveAs.Execute(null, window);
+
+            Assert.Equal("No file was chosen, so nothing was written.", window.StatusText.Text);
+        });
+    }
+
     [Fact]
     public void RenamingRefusesWhenTheNewTitleIsTaken()
     {
@@ -485,6 +502,30 @@ public sealed class ScriptsTabTests : IDisposable
 
         Assert.Equal("Chapter one", suggested);
         Assert.Equal("The script body.", File.ReadAllText(Path.Combine(_scriptsDir, "Chapter two.txt")));
+    }
+
+    /// <summary>A tab nobody has named yet offers its own name, so Enter saves something sensible.</summary>
+    [Fact]
+    public void ATabThatWasNeverNamedOffersTheNameOnItsOwnTab()
+    {
+        var window = CreateWindow();
+        var suggested = "unset";
+
+        _wpf.Invoke(() =>
+        {
+            window.InputText.Text = "The script body.";
+            window.ScriptTitleBox.Text = string.Empty;
+            window.ScriptNamePrompt = offered =>
+            {
+                suggested = offered;
+                return offered;
+            };
+
+            window.SaveScriptWithPrompt();
+        });
+
+        Assert.Equal("Text 1", suggested);
+        Assert.Equal("The script body.", File.ReadAllText(Path.Combine(_scriptsDir, "Text 1.txt")));
     }
 
     [Fact]

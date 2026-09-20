@@ -13,12 +13,20 @@ namespace TtsUtil.App;
 /// <summary>Asks for the name a script is saved under, so Ctrl+S never saves under a stale title.</summary>
 public partial class NameScriptWindow : Window
 {
+    private readonly string _fallback;
+
     public NameScriptWindow(string suggested)
     {
         InitializeComponent();
+        _fallback = suggested.Trim();
         NameBox.Text = suggested;
         NameBox.SelectAll();
         Loaded += (_, _) => NameBox.Focus();
+
+        if (_fallback.Length == 0) return;
+
+        NameBox.Tag = _fallback;
+        HintText.Text = $"Left empty it saves as {_fallback}. A name already in the library is replaced.";
     }
 
     /// <summary>The name that was typed, or null when the dialog was dismissed.</summary>
@@ -27,6 +35,8 @@ public partial class NameScriptWindow : Window
     private void OnSave(object sender, RoutedEventArgs e)
     {
         var name = NameBox.Text.Trim();
+        if (name.Length == 0) name = _fallback;
+
         if (name.Length == 0)
         {
             HintText.Text = "Type a name first.";

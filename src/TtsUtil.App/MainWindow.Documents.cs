@@ -325,6 +325,7 @@ internal sealed class TextDocument
         Tab = tab;
         Box = box;
         Title = title;
+        box.VerticalContentAlignment = VerticalAlignment.Top;
         Label = new TextBlock
         {
             Text = title,
@@ -339,7 +340,18 @@ internal sealed class TextDocument
 
     public TextBlock Label { get; }
 
-    public string Title { get; set; }
+    /// <summary>The name on the tab. An empty box wears it in grey until it is typed into.</summary>
+    public string Title
+    {
+        get => _title;
+        set
+        {
+            _title = value;
+            Box.Tag = value;
+        }
+    }
+
+    private string _title = string.Empty;
 
     /// <summary>The words as they were at the last save, which the star is measured against.</summary>
     public string SavedText { get; set; } = string.Empty;

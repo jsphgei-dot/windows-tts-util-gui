@@ -52,6 +52,29 @@ public sealed class DocumentTabsTests : IDisposable
         });
     }
 
+    /// <summary>An untouched tab shows its own name in grey, and keeps showing the right one
+    /// after the tab is renamed.</summary>
+    [Fact]
+    public void AnEmptyTabWearsItsOwnNameAsTheHint()
+    {
+        var window = CreateWindow();
+
+        _wpf.Invoke(() =>
+        {
+            var second = window.NewDocument();
+
+            Assert.Equal("Text 1", window.Documents[0].Box.Tag);
+            Assert.Equal("Text 2", second.Box.Tag);
+
+            window.DocumentTabs.SelectedItem = second.Tab;
+            window.TextScriptTitle = "Act Two";
+
+            Assert.Equal("Act Two", second.Box.Tag);
+
+            window.Close();
+        });
+    }
+
     /// <summary>The title box holds the name of the tab in front and nothing else, so a new tab
     /// cannot be saved over the script the last tab came from.</summary>
     [Fact]

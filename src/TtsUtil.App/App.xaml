@@ -106,7 +106,8 @@
                             <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" />
                             <TextBlock x:Name="Hint" Text="{TemplateBinding Tag}" Foreground="#999"
                                        Margin="{TemplateBinding Padding}" IsHitTestVisible="False"
-                                       VerticalAlignment="Center" Visibility="Collapsed" />
+                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                       Visibility="Collapsed" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
