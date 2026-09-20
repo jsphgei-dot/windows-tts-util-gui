@@ -1,4 +1,4 @@
-; TTS Util Win installer. Build it with: scripts\BuildPortable.ps1 -Installer
+﻿; TTS Util Win installer. Build it with: scripts\BuildPortable.ps1 -Installer
 ; Direct use: iscc installer\TtsUtilWin.iss
 
 #ifndef AppVersion
@@ -482,4 +482,67 @@ begin
     RegWriteStringValue(HKA, UninstallKey, ArchValue, '{#TargetArch}');
     ExtractVoices;
   end;
+end;
+{ Walks the folder rather than trusting the catalog, since a reader may have dropped voices
+  in by hand or run FetchVoices.ps1 themselves. }
+function VoicesFolderBytes(const Dir: String): Int64;
+var
+  FindRec: TFindRec;
+  Child: String;
+begin
+  Result := 0;
+  if not FindFirst(AddBackslash(Dir) + '*', FindRec) then
+    Exit;
+
+  try
+    repeat
+      if (FindRec.Name <> '.') and (FindRec.Name <> '..') then
+      begin
+        Child := AddBackslash(Dir) + FindRec.Name;
+
+        if FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY <> 0 then
+          Result := Result + VoicesFolderBytes(Child)
+        else
+          Result := Result + Int64(FindRec.SizeHigh) * 4294967296 + Int64(FindRec.SizeLow);
+      end;
+    until not FindNext(FindRec);
+  finally
+    FindClose(FindRec);
+  end;
+end;
+
+function DescribeSize(Bytes: Int64): String;
+begin
+  if Bytes >= 1073741824 then
+    Result := Format('%.1f GB', [Bytes / 1073741824.0])
+  else
+    Result := Format('%d MB', [Bytes div 1048576]);
+end;
+
+{ Settings and saved scripts outlive an uninstall and the voices do not, which is a surprise
+  worth one prompt when the folder holds gigabytes somebody waited on. The default is Yes, so
+  the silent run that swaps one architecture for another is not left waiting on an answer. }
+function InitializeUninstall: Boolean;
+var
+  Dir: String;
+  Bytes: Int64;
+begin
+  Result := True;
+
+  Dir := VoicesDirectory;
+  if not DirExists(Dir) then
+    Exit;
+
+  Bytes := VoicesFolderBytes(Dir);
+  if Bytes = 0 then
+    Exit;
+
+  Result := SuppressibleMsgBox(
+    'Uninstalling {#AppName} also removes the voices it keeps in' + #13#10 +
+    Dir + #13#10 + #13#10 +
+    'That is ' + DescribeSize(Bytes) + ' of downloaded models, which would have to be ' +
+    'downloaded again. Your settings and any saved scripts are kept.' + #13#10 + #13#10 +
+    'Copy that folder somewhere else first if you want to keep the voices.' + #13#10 + #13#10 +
+    'Carry on with the uninstall?',
+    mbConfirmation, MB_YESNO, IDYES) = IDYES;
 end;
