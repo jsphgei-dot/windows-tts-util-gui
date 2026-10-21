@@ -155,6 +155,39 @@ public sealed class VoiceCatalogTests : IDisposable
         Assert.Equal(new[] { "zebra", "alpha", "middle" }, voices.Select(v => v.Name));
     }
 
+    [Fact]
+    public void AKittenModelIsToldApartFromKokoroByItsModelType()
+    {
+        var dir = NewVoiceDirectory("some-voice");
+        WriteFile(dir, "tokens.txt");
+        WriteFile(dir, "voices.bin");
+        File.WriteAllBytes(Path.Combine(dir, "model.fp16.onnx"), OnnxMetadataTests.Model(("model_type", "kitten-tts")));
+
+        Assert.Equal(VoiceModelKind.Kitten, VoiceCatalog.TryLoad(dir)!.Kind);
+    }
+
+    [Fact]
+    public void AKittenFolderIsKittenWhenTheModelSaysNothing()
+    {
+        var dir = NewVoiceDirectory("kitten-nano-en-v0_1-fp16");
+        WriteFile(dir, "tokens.txt");
+        WriteFile(dir, "voices.bin");
+        WriteFile(dir, "model.onnx", 4096);
+
+        Assert.Equal(VoiceModelKind.Kitten, VoiceCatalog.TryLoad(dir)!.Kind);
+    }
+
+    [Fact]
+    public void AKokoroModelStaysKokoroWhenItSaysSo()
+    {
+        var dir = NewVoiceDirectory("kitten-named-but-kokoro");
+        WriteFile(dir, "tokens.txt");
+        WriteFile(dir, "voices.bin");
+        File.WriteAllBytes(Path.Combine(dir, "model.onnx"), OnnxMetadataTests.Model(("model_type", "kokoro")));
+
+        Assert.Equal(VoiceModelKind.Kokoro, VoiceCatalog.TryLoad(dir)!.Kind);
+    }
+
     private string NewVoiceDirectory(string name)
     {
         var dir = Path.Combine(_root, name);

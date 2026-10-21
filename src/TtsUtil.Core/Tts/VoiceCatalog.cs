@@ -58,8 +58,8 @@ public static class VoiceCatalog
 
         if (voicesBin is not null)
         {
-            kind = VoiceModelKind.Kokoro;
             model = onnxFiles.FirstOrDefault(f => !IsVocoder(f)) ?? onnxFiles[0];
+            kind = IsKitten(model) ? VoiceModelKind.Kitten : VoiceModelKind.Kokoro;
         }
         else if (vocoder is not null && onnxFiles.Length > 1)
         {
@@ -90,6 +90,14 @@ public static class VoiceCatalog
             ModelCardPath = modelCard,
         };
     }
+
+    /// <summary>Kitten ships a voices.bin like Kokoro but loads differently, which only the
+    /// model's own model_type tells apart.</summary>
+    private static bool IsKitten(string model) =>
+        OnnxMetadata.Read(model).TryGetValue("model_type", out var type)
+            ? type.StartsWith("kitten", StringComparison.OrdinalIgnoreCase)
+            : Path.GetFileName(Path.GetDirectoryName(model) ?? string.Empty)
+                .StartsWith("kitten", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsVocoder(string path)
     {

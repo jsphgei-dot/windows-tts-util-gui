@@ -9,7 +9,7 @@ using SherpaOnnx;
 
 namespace TtsUtil.Core.Tts;
 
-/// <summary>An offline sherpa voice: vits, matcha or kokoro.</summary>
+/// <summary>An offline sherpa voice: vits, matcha, kokoro or kitten.</summary>
 public sealed class SherpaTtsEngine : ITtsEngine
 {
     private readonly object _lock = new();
@@ -50,6 +50,13 @@ public sealed class SherpaTtsEngine : ITtsEngine
                 model.Kokoro.DataDir = voice.DataDirPath ?? string.Empty;
                 model.Kokoro.DictDir = voice.DictDirPath ?? string.Empty;
                 model.Kokoro.Lexicon = voice.LexiconPath ?? string.Empty;
+                break;
+
+            case VoiceModelKind.Kitten:
+                model.Kitten.Model = voice.ModelPath;
+                model.Kitten.Voices = voice.VoicesBinPath ?? string.Empty;
+                model.Kitten.Tokens = voice.TokensPath;
+                model.Kitten.DataDir = voice.DataDirPath ?? string.Empty;
                 break;
 
             case VoiceModelKind.Matcha:

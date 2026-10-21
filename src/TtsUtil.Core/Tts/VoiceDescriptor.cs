@@ -11,6 +11,7 @@ public enum VoiceModelKind
     Vits,
     Matcha,
     Kokoro,
+    Kitten,
 }
 
 /// <summary>Where a voice comes from.</summary>

@@ -13,7 +13,7 @@
 * **Offline, always.** Your machine is responsible for running the entire generation, nothing is uploaded or downloaded to generate audio. It reaches the network for two purposes only: to
   download a voice you asked for, and for the optional update check, which sends out nothing and
   can be switched off.
-* **Real neural voices.** Piper, Kokoro and Matcha models run through the
+* **Real neural voices.** Piper, Kokoro, Kitten and Matcha models run through the
   [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) engine locally, including one with over 900 speakers.
 * **Large library of voice models.** The voice you install in the app decides the speed, and the performance range is
   wide. On my computer, the heaviest neural voice, [Kokoro](https://github.com/hexgrad/kokoro), renders 1.4x to 4.3x
