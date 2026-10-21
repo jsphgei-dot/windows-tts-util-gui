@@ -3,7 +3,7 @@
 Newest first. Version codes are monotonic and never reused. The top section carries what is
 built but not yet released, and the release step renames it to the version going out.
 
-## Unreleased
+## 0.13.0-beta (version code 20)
 
 * **The text follows the reading.** While a reading plays, the editor scrolls so the line being
   heard stays in the middle of the box, so you can read along. The cursor and selection stay
