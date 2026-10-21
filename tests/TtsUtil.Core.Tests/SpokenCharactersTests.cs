@@ -114,6 +114,19 @@ public sealed class SpokenCharactersTests
     }
 
     [Fact]
+    public void TheSpaceAfterAPausedSentenceIsNotCountedAsFiltered()
+    {
+        var options = new ChunkerOptions { Silence = { SentenceMs = 300 } };
+        options.Spoken.Policy = SpokenCharacterPolicy.LatinOnly;
+
+        var chunker = new TextChunker(options);
+        var chunks = chunker.Read("The first sentence.  The second one.").ToList();
+
+        Assert.Equal("The second one", chunks[1].Text);
+        Assert.Equal(0, chunker.CharactersFiltered);
+    }
+
+    [Fact]
     public void AnUtteranceStrippedToNothingStillCarriesItsSilence()
     {
         var options = new ChunkerOptions { Silence = { SentenceMs = 300 } };

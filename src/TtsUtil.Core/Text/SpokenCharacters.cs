@@ -45,12 +45,13 @@ public static class SpokenCharacters
     /// <summary>Punctuation the engine phrases on rather than voices, so it always survives.</summary>
     private const string Prosody = ".,;:?!…。，；：？！";
 
-    /// <summary>Rewrites the buffer in place, returning how many characters it lost.</summary>
+    /// <summary>Rewrites the buffer in place, returning how many characters it lost. Spaces it
+    /// gathers up or trims are not counted.</summary>
     public static int Apply(List<char> buffer, SpokenCharacterOptions options)
     {
         if (options.Policy == SpokenCharacterPolicy.Off || buffer.Count == 0) return 0;
 
-        var before = buffer.Count;
+        var before = Visible(buffer);
         var output = new List<char>(buffer.Count);
 
         for (var index = 0; index < buffer.Count; index++)
@@ -93,8 +94,10 @@ public static class SpokenCharacters
 
         buffer.Clear();
         buffer.AddRange(output);
-        return before - buffer.Count;
+        return before - Visible(buffer);
     }
+
+    private static int Visible(List<char> buffer) => buffer.Count(c => !char.IsWhiteSpace(c));
 
     /// <summary>Applies the policy to a string, which is what tests and callers usually want.</summary>
     public static string Clean(string text, SpokenCharacterOptions options)
