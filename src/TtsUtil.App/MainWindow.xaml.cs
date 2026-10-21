@@ -1857,6 +1857,7 @@ public partial class MainWindow : Window
         _settings.Save();
         LicenseText.Text = ReadLicenseSummary(voice);
 
+        CancelTypingPlayback();
         DisposeEngine();
         if (_loadVoiceOnSelection) await EnsureEngineAsync();
     }

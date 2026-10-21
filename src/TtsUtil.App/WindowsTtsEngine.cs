@@ -79,7 +79,10 @@ public sealed class WindowsTtsEngine : ITtsEngine
         onSamples(sound.Samples);
     }
 
-    public void Dispose() => _synthesizer.Dispose();
+    public void Dispose()
+    {
+        lock (_lock) _synthesizer.Dispose();
+    }
 
     /// <summary>Windows before 1709 has no rate control on these voices, which read at their
     /// own speed there rather than throwing.</summary>

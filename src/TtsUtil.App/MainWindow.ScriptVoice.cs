@@ -26,6 +26,9 @@ public partial class MainWindow
     /// voice that is no longer installed leaves the picker alone.</summary>
     internal bool ApplyScriptVoice(string title)
     {
+        // The picker is held still during a run, and setting it from here would pull the voice away.
+        if (_busy) return false;
+
         var properties = Scripts.LoadProperties(title);
         if (properties is null) return false;
 

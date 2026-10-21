@@ -277,6 +277,33 @@ public sealed class SynthesisSeamTests : IDisposable
         Assert.Equal("not audio", File.ReadAllText(Path.Combine(folder, "First.wav")));
     }
 
+    /// <summary>Opening a script saved with another voice set the picker from code mid run,
+    /// which disposed the engine the run was still speaking with.</summary>
+    [Fact]
+    public async Task AScriptOpenedInANewTabMidRunLeavesTheVoiceAlone()
+    {
+        var engine = new FakeEngine { HoldUntilCancelled = true };
+        var window = CreateWindow(engine, new StubPlayback());
+        WriteScript("Other Voice", "Read by Zira.");
+        new ScriptLibrary(_scriptsDir).SaveProperties("Other Voice", new ScriptProperties { VoiceName = "Zira" });
+
+        _wpf.Invoke(() => window.InputText.Text = "A reading in progress.");
+        Click(window.ReadButton);
+        Assert.True(engine.Started.Wait(TimeSpan.FromSeconds(10)));
+
+        _wpf.Invoke(() =>
+        {
+            window.RefreshScripts();
+            window.OpenScriptInNewTab(window.Scripts.List().Single());
+
+            Assert.Equal(0, window.VoiceBox.SelectedIndex);
+            Assert.Equal(0, engine.Disposals);
+        });
+
+        Click(window.StopButton);
+        await CurrentRun(window);
+    }
+
     // --- Scaffolding ---
 
     private void WriteScript(string title, string text) =>
@@ -307,6 +334,10 @@ public sealed class SynthesisSeamTests : IDisposable
                     new VoiceDescriptor
                     {
                         Name = "David", Source = VoiceSource.Windows, Id = "david", Language = "en-GB",
+                    },
+                    new VoiceDescriptor
+                    {
+                        Name = "Zira", Source = VoiceSource.Windows, Id = "zira", Language = "en-US",
                     },
                 },
                 EngineLoader = (_, _) => engine,
@@ -369,9 +400,9 @@ public sealed class SynthesisSeamTests : IDisposable
             onSamples(new float[SampleRate / 10]);
         }
 
-        public void Dispose()
-        {
-        }
+        public int Disposals { get; private set; }
+
+        public void Dispose() => Disposals++;
     }
 
     private sealed class StubPlayback : IAudioPlayback
