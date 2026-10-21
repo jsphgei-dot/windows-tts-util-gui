@@ -30,7 +30,7 @@ public partial class MainWindow
         voice.Source == VoiceSource.Windows
             ? WindowsTtsEngine.Load(voice) ?? throw new InvalidOperationException(
                 $"{voice.Name} is no longer installed in Windows.")
-            : SherpaTtsEngine.Load(voice, threads);
+            : VoiceCheck.LoadSherpa(voice, threads);
 
     private ITtsEngine LoadEngine(VoiceDescriptor voice, int threads) => EngineLoader(voice, threads);
 

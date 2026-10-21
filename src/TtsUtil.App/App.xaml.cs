@@ -21,6 +21,9 @@ public partial class App : System.Windows.Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // A voice check is a child run with no window, which ends as soon as the voice speaks.
+        if (e.Args.Length >= 2 && e.Args[0] == VoiceCheck.Argument) Environment.Exit(VoiceCheck.RunChild(e.Args));
+
         VoicesDirectoryOverride = ReadVoicesArgument(e.Args);
         base.OnStartup(e);
     }
