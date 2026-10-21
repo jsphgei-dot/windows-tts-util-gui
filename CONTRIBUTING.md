@@ -18,6 +18,10 @@ Bugs and voice suggestions go to
 [issues](https://github.com/jsphgei-dot/tts-util-win/issues). A report that names the voice, the
 setting and the text that misbehaved is worth a great deal.
 
+[docs/writing-a-feature.md](docs/writing-a-feature.md) walks the whole path, from the issue to
+the last test, through one real feature. Read that if you want the order. This page is the
+rules.
+
 ## Getting set up
 
 You need the .NET 10 SDK and Windows 10 version 1607 or newer. Nothing else.
@@ -136,9 +140,10 @@ is quick. Bypass one commit with `--no-verify` if you must, and expect to be ask
   top and the release step renames it.
 * **The two READMEs are different documents.** `README.md` at the root is the front door of
   the repository and stays short, with the detail in `docs\`. `distribution\README.md` is for
-  somebody downloading a build: it is copied into the portable folder, installed beside the
-  program, and published to the distribution repository byte for byte, so it must stay free of
-  anything about the source.
+  somebody downloading a build: it is copied into the portable folder and installed beside the
+  program, so it must stay free of anything about the source.
+  `distribution\retired-repo-README.md` is neither, it is the landing page of the archived
+  download repository, and nothing ships it.
 * **Settings need their help text.** Every setting is explained behind a question mark, and the
   text lives in `SettingsHelp` in Core rather than in XAML so it can be tested. A new setting
   without help text is not finished.

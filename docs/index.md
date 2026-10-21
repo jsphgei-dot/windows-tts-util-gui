@@ -1,4 +1,4 @@
-﻿[Documentation index](index.md) | [Usage](usage.md) | [Performance](performance.md) | [Build](building.md) | [Release](releasing.md) | [Develop](developing.md)
+﻿[Documentation index](index.md) | [Usage](usage.md) | [Performance](performance.md) | [Build](building.md) | [Release](releasing.md) | [Develop](developing.md) | [Write a feature](writing-a-feature.md)
 
 ---
 
@@ -15,6 +15,7 @@ and where to go next.
 | [Build from source](building.md) | Anybody compiling it | The SDK, the scripts, the switches, the output |
 | [Release](releasing.md) | Whoever cuts a release | Publishing, the update manifest, code signing |
 | [Develop and test](developing.md) | Anybody changing the code | Projects, tests, git hooks, versioning |
+| [Writing a feature](writing-a-feature.md) | Anybody adding one | Every step from the issue to the last test, followed through one real feature |
 | [Contributing](../CONTRIBUTING.md) | Anybody sending a change | Where a change belongs, the style, the commit format |
 | [Changelog](../distribution/CHANGELOG.md) | Anybody wondering what changed | Every release, newest first |
 
