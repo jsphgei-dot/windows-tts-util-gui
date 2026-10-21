@@ -87,6 +87,9 @@ while such copies are still checking.
 
 Any run holding the x64 zips in `dist\` writes the manifest, and a run without them uploads its
 assets and leaves the manifest alone. The x64 zips are what the older copies are offered.
+`-SkipManifest` uploads the assets and leaves the manifest alone even with the x64 zips there.
+`Release.ps1` passes it on every run but the last, so the manifest changes once, after all
+nine files are up.
 
 ## Where a build looks for its update
 

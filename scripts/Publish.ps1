@@ -38,6 +38,8 @@ param(
 
     [switch]$SkipBuild,
 
+    [switch]$SkipManifest,
+
     [string]$CertThumbprint,
 
     [string]$TimestampUrl = 'http://timestamp.digicert.com'
@@ -229,6 +231,11 @@ if ($MirrorRepo) { Send-Assets $MirrorRepo }
 
 # The manifest names the architectures whose zips are in dist, so the run that publishes last
 # is the one that offers them all. Without the x64 zips there is nothing to write.
+if ($SkipManifest) {
+    Write-Host 'Assets uploaded. The manifest was left alone, as asked.' -ForegroundColor Yellow
+    return
+}
+
 if (-not (Get-ArchZips 'x64')) {
     Write-Host 'Assets uploaded. The manifest was left alone, which needs an x64 build.' -ForegroundColor Yellow
     return

@@ -191,7 +191,8 @@ if ($DryRun) {
 # Publish
 
 foreach ($runtime in $runtimes) {
-    & $publish -Runtime $runtime -Publish -SkipBuild -MirrorRepo '' -NotesFile $notesPath
+    $last = $runtime -eq $runtimes[-1]
+    & $publish -Runtime $runtime -Publish -SkipBuild -MirrorRepo '' -NotesFile $notesPath -SkipManifest:(-not $last)
     if (-not $?) { throw "Publishing $runtime failed. Re-run Publish.ps1 -Publish -SkipBuild for it." }
 }
 
