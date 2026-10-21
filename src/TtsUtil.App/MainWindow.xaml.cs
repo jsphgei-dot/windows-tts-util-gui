@@ -6,6 +6,7 @@
 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,6 +36,7 @@ public partial class MainWindow : Window
     private int _queuedSnippets;
     private bool _initialising = true;
     private bool _busy;
+    private bool _starting;
     private readonly ObservableCollection<VoiceCatalogueRow> _catalogueRows = new();
     private CancellationTokenSource? _installCancellation;
     private bool _installing;
@@ -478,20 +480,30 @@ public partial class MainWindow : Window
     private async Task<RunOutcome> RunSynthesisAsync(Func<TextReader> readerFactory, string? outputPath,
         long? knownCharacters = null, long startOffset = 0, bool startPaused = false)
     {
-        if (_busy)
+        if (_busy || _starting)
         {
             SetStatus("Already working. Press Stop first.");
             return RunOutcome.Failed;
         }
 
-        var engine = await EnsureEngineAsync();
-        if (engine is null) return RunOutcome.Failed;
-
-        // Every run starts from the voice's loaded state, so a restart or a repeat sounds the same.
-        if (engine.NeedsVoiceReset)
+        // Claimed before the first await. A second click while the voice loads starts nothing.
+        _starting = true;
+        ITtsEngine? engine;
+        try
         {
-            SetStatus("Preparing the voice...");
-            await Task.Run(engine.ResetVoice);
+            engine = await EnsureEngineAsync();
+            if (engine is null) return RunOutcome.Failed;
+
+            // Every run starts from the voice's loaded state, so a restart or a repeat sounds the same.
+            if (engine.NeedsVoiceReset)
+            {
+                SetStatus("Preparing the voice...");
+                await Task.Run(engine.ResetVoice);
+            }
+        }
+        finally
+        {
+            _starting = false;
         }
 
         CancelTypingPlayback();
@@ -621,6 +633,7 @@ public partial class MainWindow : Window
 
     private void OnLineListDoubleClick(object sender, MouseButtonEventArgs e)
     {
+        if (ItemsControl.ContainerFromElement(LineList, e.OriginalSource as DependencyObject) is not ListBoxItem) return;
         if (LineList.SelectedItem is not ScriptLineRow row) return;
         ReadOrRestartFrom(row.Start);
     }
@@ -666,6 +679,8 @@ public partial class MainWindow : Window
 
     private void ReadFrom(int startOffset, bool startPaused = false)
     {
+        if (_starting) return;
+
         var text = InputText.Text;
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -926,7 +941,8 @@ public partial class MainWindow : Window
         var selected = (LineList.SelectedItem as ScriptLineRow)?.Index ?? -1;
 
         LineList.Items.Clear();
-        foreach (var line in _lineMap.Lines) LineList.Items.Add(new ScriptLineRow(line));
+        var numberWidth = _lineMap.Lines.Count.ToString(CultureInfo.InvariantCulture).Length;
+        foreach (var line in _lineMap.Lines) LineList.Items.Add(new ScriptLineRow(line, numberWidth));
 
         if (selected >= 0 && selected < LineList.Items.Count) LineList.SelectedIndex = selected;
     }

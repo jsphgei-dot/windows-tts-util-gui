@@ -80,6 +80,36 @@ public sealed class SynthesisSeamTests : IDisposable
     }
 
     [Fact]
+    public async Task ASecondReadWhileTheVoiceIsPreparingStartsNothing()
+    {
+        var engine = new FakeEngine { NeedsReset = true, HoldReset = true };
+        var players = 0;
+        var window = CreateWindow(engine, new StubPlayback());
+        _wpf.Invoke(() =>
+        {
+            window.PlayerFactory = (_, _) =>
+            {
+                Interlocked.Increment(ref players);
+                return new StubPlayback();
+            };
+            window.InputText.Text = "Something to say.";
+        });
+
+        Click(window.ReadButton);
+        var first = CurrentRun(window);
+        Assert.True(engine.ResetStarted.Wait(TimeSpan.FromSeconds(10)));
+
+        Click(window.ReadButton);
+        var second = CurrentRun(window);
+        engine.ResetGate.Set();
+        await first;
+        await second;
+
+        Assert.Equal(1, players);
+        Assert.Equal(1, engine.Resets);
+    }
+
+    [Fact]
     public async Task TextTheFilterEmptiesSaysSoRatherThanClaimingItRead()
     {
         var window = CreateWindow(new FakeEngine(), new StubPlayback());
@@ -380,7 +410,18 @@ public sealed class SynthesisSeamTests : IDisposable
 
         public bool NeedsVoiceReset => NeedsReset;
 
-        public void ResetVoice() => Resets++;
+        public bool HoldReset { get; set; }
+
+        public ManualResetEventSlim ResetStarted { get; } = new(false);
+
+        public ManualResetEventSlim ResetGate { get; } = new(false);
+
+        public void ResetVoice()
+        {
+            Resets++;
+            ResetStarted.Set();
+            if (HoldReset) ResetGate.Wait(TimeSpan.FromSeconds(10));
+        }
 
         public void Synthesize(string text, int speakerId, float speed, SampleCallback onSamples,
             CancellationToken cancellationToken)

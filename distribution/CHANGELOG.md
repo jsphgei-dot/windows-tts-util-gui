@@ -3,6 +3,17 @@
 Newest first. Version codes are monotonic and never reused. The top section carries what is
 built but not yet released, and the release step renames it to the version going out.
 
+## Unreleased
+
+* **Clicking the line list's scroll arrows no longer starts readings.** Two quick clicks on an
+  arrow counted as a double click on the selected line, and a second click while the voice was
+  getting ready started another reading that Stop could not reach. Only a double click on a
+  line reads from it now, and a reading already starting turns the next one away.
+
+* **Long lines wrap in the line list.** A line too wide for the list now wraps inside its own
+  row, indented past its number, instead of running off the side behind a scroll bar. A faint
+  rule marks where each line ends.
+
 ## 0.13.0-beta (version code 20)
 
 * **The text follows the reading.** While a reading plays, the editor scrolls so the line being
