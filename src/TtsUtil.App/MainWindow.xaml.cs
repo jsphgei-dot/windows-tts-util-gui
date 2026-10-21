@@ -985,16 +985,35 @@ public partial class MainWindow : Window
     private void StopFollowingPlayback() => _playbackFollow?.Stop();
 
     /// <summary>Follows the run down the list, so the spoken line is visible.</summary>
-    private void HighlightSpokenLine(long charactersRead)
+    internal void HighlightSpokenLine(long charactersRead)
     {
-        if (LinePanel.Visibility != Visibility.Visible || LineList.Items.Count == 0) return;
-
         var line = _lineMap.LineAt(_runStartOffset + charactersRead);
-        if (line == _spokenLine || line >= LineList.Items.Count) return;
+        if (line == _spokenLine || line < 0 || line >= _lineMap.Count) return;
 
         _spokenLine = line;
+        if (_player is not null) CentreSpokenLineInText(_lineMap[line].Start);
+
+        if (LinePanel.Visibility != Visibility.Visible || line >= LineList.Items.Count) return;
+
         LineList.SelectedIndex = line;
         LineList.ScrollIntoView(LineList.Items[line]);
+    }
+
+    /// <summary>Scrolls the text being read so the spoken line sits in the middle of the box,
+    /// leaving the caret and selection where they were.</summary>
+    private void CentreSpokenLineInText(int characterIndex)
+    {
+        if (_runDocument is not null && !ReferenceEquals(_runDocument, ActiveDocument)) return;
+
+        var box = InputText;
+        if (box is null || box.LineCount <= 0 || box.ViewportHeight <= 0) return;
+
+        var row = box.GetLineIndexFromCharacterIndex(Math.Clamp(characterIndex, 0, box.Text.Length));
+        if (row < 0) return;
+
+        var rowHeight = box.ExtentHeight / box.LineCount;
+        var offset = row * rowHeight - (box.ViewportHeight - rowHeight) / 2;
+        box.ScrollToVerticalOffset(Math.Clamp(offset, 0, Math.Max(0, box.ExtentHeight - box.ViewportHeight)));
     }
 
     private void OnSaveTextToWave(object sender, RoutedEventArgs e) => SaveTextToWave();

@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using TtsUtil.Core.Settings;
+using TtsUtil.Core.Tts;
 using Xunit;
 
 namespace TtsUtil.App.Tests;
@@ -146,6 +147,37 @@ public sealed class LineListTests : IDisposable
         _wpf.Invoke(() => Assert.Equal(3, window.LineList.Items.Count));
     }
 
+    [Fact]
+    public void TheTextScrollsToKeepTheSpokenLineInTheMiddle()
+    {
+        var window = CreateWindow();
+
+        _wpf.Invoke(() =>
+        {
+            window.Height = 600;
+            window.Show();
+
+            var box = window.InputText;
+            box.Text = string.Join("\r\n", Enumerable.Range(1, 200).Select(n => $"Line {n}."));
+            box.CaretIndex = 0;
+            window.RebuildLineList();
+            window.UpdateLayout();
+
+            window.ActivePlayback = new FakePlayback();
+            window.HighlightSpokenLine(box.GetCharacterIndexFromLineIndex(150));
+            window.UpdateLayout();
+
+            var first = box.GetFirstVisibleLineIndex();
+            var last = box.GetLastVisibleLineIndex();
+            Assert.InRange(150, first + 1, last - 1);
+            Assert.InRange(150 - first, (last - first) / 2 - 2, (last - first) / 2 + 2);
+            Assert.Equal(0, box.CaretIndex);
+
+            window.ActivePlayback = null;
+            window.Close();
+        });
+    }
+
     private void Click(ButtonBase button) =>
         _wpf.Invoke(() => button.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent)));
 
@@ -163,5 +195,40 @@ public sealed class LineListTests : IDisposable
 
         _windows.Add(window);
         return window;
+    }
+
+    private sealed class FakePlayback : IAudioPlayback
+    {
+        public bool IsPaused => false;
+
+        public long PlayedCharacters => 0;
+
+        public void Pause()
+        {
+        }
+
+        public void Resume()
+        {
+        }
+
+        public void Stop()
+        {
+        }
+
+        public void WaitUntilDrained()
+        {
+        }
+
+        public void WriteSamples(ReadOnlySpan<float> samples)
+        {
+        }
+
+        public void WriteSilence(int milliseconds)
+        {
+        }
+
+        public void Dispose()
+        {
+        }
     }
 }

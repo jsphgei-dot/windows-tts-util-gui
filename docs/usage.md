@@ -1,4 +1,4 @@
-﻿[Documentation index](index.md) | [Usage](usage.md) | [Performance](performance.md) | [Build](building.md) | [Release](releasing.md) | [Develop](developing.md)
+﻿[Documentation index](index.md) | [Usage](usage.md) | [Performance](performance.md) | [Build](building.md) | [Release](releasing.md) | [Develop](developing.md) | [Write a feature](writing-a-feature.md)
 
 ---
 
@@ -230,6 +230,10 @@ several seconds ahead of the speaker, so following synthesis left the highlight 
 early. The reading is marked as it is queued and the list follows the marks as they play. That
 makes Stop and **Read from here** a resume, since the selection is left on the line playback
 reached. Untick **Lines** to hide the list and give the editor the full width.
+
+The editor follows along too. While a reading plays, the text scrolls so the line being heard
+sits in the middle of the box, whether or not the list is showing, and the cursor and any
+selection are left where they were. Writing to a file does not scroll the text.
 
 ## Files and PDFs
 
