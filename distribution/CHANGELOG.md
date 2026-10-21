@@ -3,7 +3,7 @@
 Newest first. Version codes are monotonic and never reused. The top section carries what is
 built but not yet released, and the release step renames it to the version going out.
 
-## Unreleased
+## 0.13.1-beta (version code 21)
 
 * **Clicking the line list's scroll arrows no longer starts readings.** Two quick clicks on an
   arrow counted as a double click on the selected line, and a second click while the voice was
