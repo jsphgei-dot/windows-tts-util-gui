@@ -533,6 +533,7 @@ public sealed class MainWindowTests : IDisposable
             window.ScaleSilenceBox.IsChecked = true;
             window.FilterHashBox.IsChecked = true;
             window.FilterMailBox.IsChecked = true;
+            window.FilterWebBox.IsChecked = false;
         });
 
         Click(window.ApplySettingsButton);

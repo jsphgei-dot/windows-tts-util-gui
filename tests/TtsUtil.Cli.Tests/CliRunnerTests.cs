@@ -143,7 +143,7 @@ public sealed class CliRunnerTests : IDisposable
 
         Assert.True(new FileInfo(path).Length > 44);
         Assert.Contains($"Wrote {path}.", _error.ToString());
-        Assert.Equal(new[] { "Hello there." }, _engine.Spoken);
+        Assert.Equal(new[] { "Hello there" }, _engine.Spoken);
     }
 
     [Fact]
@@ -275,7 +275,7 @@ public sealed class CliRunnerTests : IDisposable
         File.WriteAllText(source, "The chapter opens.");
 
         Assert.Equal(ExitCodes.Ok, Run("read", source, "-o", Path.Combine(_root, "a.wav")));
-        Assert.Equal(new[] { "The chapter opens." }, _engine.Spoken);
+        Assert.Equal(new[] { "The chapter opens" }, _engine.Spoken);
     }
 
     [Fact]

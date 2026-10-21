@@ -60,7 +60,7 @@ public sealed class AppSettings
     /// <summary>Speakers the user starred, keyed by lower case voice name.</summary>
     public Dictionary<string, List<int>> FavouriteSpeakers { get; set; } = new();
 
-    public float Speed { get; set; } = 1.0f;
+    public float Speed { get; set; } = 0.9f;
 
     /// <summary>Threads the voice model uses, or null to work it out from the processor count.</summary>
     public int? NumThreads { get; set; }
@@ -69,21 +69,21 @@ public sealed class AppSettings
     [JsonIgnore]
     public int ResolvedNumThreads => ThreadPlan.Resolve(NumThreads);
 
-    public int SilenceLineEndingMs { get; set; } = 200;
+    public int SilenceLineEndingMs { get; set; } = 450;
 
-    public int SilenceSentenceMs { get; set; }
+    public int SilenceSentenceMs { get; set; } = 350;
 
-    public int SilenceQuestionMs { get; set; }
+    public int SilenceQuestionMs { get; set; } = 500;
 
-    public int SilenceExclamationMs { get; set; }
+    public int SilenceExclamationMs { get; set; } = 350;
 
-    public bool ScaleSilenceToRate { get; set; }
+    public bool ScaleSilenceToRate { get; set; } = true;
 
-    public bool FilterHashes { get; set; }
+    public bool FilterHashes { get; set; } = true;
 
-    public bool FilterWebLinks { get; set; }
+    public bool FilterWebLinks { get; set; } = true;
 
-    public bool FilterMailToLinks { get; set; }
+    public bool FilterMailToLinks { get; set; } = true;
 
     /// <summary>Which characters are allowed to be voiced. Punctuation still becomes silence.</summary>
     public SpokenCharacterPolicy SpokenCharacters { get; set; } = SpokenCharacterPolicy.LatinOnly;

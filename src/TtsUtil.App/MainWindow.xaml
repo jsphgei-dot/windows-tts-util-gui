@@ -45,7 +45,7 @@
                 </DockPanel>
 
                 <Label Grid.Row="0" Grid.Column="2" Content="Speed" />
-                <Slider x:Name="SpeedSlider" Grid.Row="0" Grid.Column="3" Minimum="0.5" Maximum="2.0" Value="1.0"
+                <Slider x:Name="SpeedSlider" Grid.Row="0" Grid.Column="3" Minimum="0.5" Maximum="2.0" Value="0.9"
                         TickFrequency="0.05" IsSnapToTickEnabled="True" VerticalAlignment="Center"
                         Margin="4,0,8,0" ValueChanged="OnSpeedChanged" />
                 <TextBlock x:Name="SpeedText" Grid.Row="0" Grid.Column="4" Text="1.00x" VerticalAlignment="Center"

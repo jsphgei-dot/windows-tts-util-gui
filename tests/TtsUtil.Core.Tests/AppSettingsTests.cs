@@ -32,12 +32,17 @@ public sealed class AppSettingsTests : IDisposable
     {
         var settings = AppSettings.LoadFrom(_path);
 
-        Assert.Equal(200, settings.SilenceLineEndingMs);
-        Assert.Equal(0, settings.SilenceSentenceMs);
-        Assert.Equal(1.0f, settings.Speed);
+        Assert.Equal(450, settings.SilenceLineEndingMs);
+        Assert.Equal(350, settings.SilenceSentenceMs);
+        Assert.Equal(500, settings.SilenceQuestionMs);
+        Assert.Equal(350, settings.SilenceExclamationMs);
+        Assert.Equal(0.9f, settings.Speed);
         Assert.Null(settings.NumThreads);
         Assert.Equal(2000, settings.MaxChunkLength);
-        Assert.False(settings.ScaleSilenceToRate);
+        Assert.True(settings.ScaleSilenceToRate);
+        Assert.True(settings.FilterHashes);
+        Assert.True(settings.FilterWebLinks);
+        Assert.True(settings.FilterMailToLinks);
         Assert.Equal(_path, settings.SourcePath);
     }
 
@@ -82,7 +87,7 @@ public sealed class AppSettingsTests : IDisposable
 
         var settings = AppSettings.LoadFrom(_path);
 
-        Assert.Equal(200, settings.SilenceLineEndingMs);
+        Assert.Equal(450, settings.SilenceLineEndingMs);
         Assert.Equal(_path, settings.SourcePath);
     }
 
@@ -138,6 +143,7 @@ public sealed class AppSettingsTests : IDisposable
         settings.MaxChunkLength = 512;
         settings.FilterHashes = true;
         settings.FilterMailToLinks = true;
+        settings.FilterWebLinks = false;
 
         var options = settings.ToChunkerOptions();
 
@@ -164,11 +170,11 @@ public sealed class AppSettingsTests : IDisposable
 
         settings.ResetToDefaults();
 
-        Assert.Equal(1.0f, settings.Speed);
+        Assert.Equal(0.9f, settings.Speed);
         Assert.Equal(2000, settings.MaxChunkLength);
         Assert.False(settings.PauseWhenUnfocused);
         Assert.Empty(settings.SpeakerIds);
         Assert.Equal(_path, settings.SourcePath);
-        Assert.Equal(1.0f, AppSettings.LoadFrom(_path).Speed);
+        Assert.Equal(0.9f, AppSettings.LoadFrom(_path).Speed);
     }
 }

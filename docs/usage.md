@@ -419,6 +419,10 @@ scaled with the speech rate so a fast reading does not sit in long gaps. **Filte
 characters, web links and mailto links before they reach the voice, since a spoken URL is
 noise rather than information.
 
+A first run starts with settings tuned for listening: a speed of 0.9, pauses of 450 ms after a
+line ending, 350 ms after a sentence, 500 ms after a question and 350 ms after an exclamation,
+pauses scaled to the speech rate, and all three filters on. **Reset settings** puts these back.
+
 ### What gets read aloud
 
 By default only letters, digits and the punctuation that phrases speech reach the engine.

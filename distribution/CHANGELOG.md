@@ -5,6 +5,33 @@ built but not yet released, and the release step renames it to the version going
 
 ## Unreleased
 
+* **The text follows the reading.** While a reading plays, the editor scrolls so the line being
+  heard stays in the middle of the box, so you can read along. The cursor and selection stay
+  put, and it works with the line list hidden.
+
+* **New settings start tuned for listening.** A first run, or **Reset settings**, now reads at
+  0.9 speed with pauses after lines, sentences, questions and exclamations (450, 350, 500 and
+  350 ms, scaled to the rate) and with the hash, web link and mailto filters on. Settings
+  already saved are left as they are.
+
+* **The filtered count no longer counts spaces.** With sentence pauses on, the space starting
+  each later sentence was reported as a filtered character, so a plain reading ended with
+  "N character(s) filtered".
+
+* **A voice that cannot load no longer takes the program down with it.** The voice engine ends
+  the whole program when it is handed a model it cannot use, and the voice was remembered as
+  the last one picked before it loaded, so every launch after that crashed the same way. Each
+  voice is now tried once in a hidden copy of the program before it is loaded for real, and a
+  bad one is reported with the engine's own reason while the program carries on.
+
+* **Kitten voices load.** A Kitten model ships a `voices.bin` like Kokoro, so it was taken for
+  Kokoro and loaded wrongly. The kind is now read from the model itself.
+
+* **Opening a script mid reading leaves the voice alone.** Opening a script saved with another
+  voice, in a new tab or the current one, switched the voice from under a reading or a file
+  being written. The voice picker was already held still while something plays, and now the
+  script's voice is too.
+
 * **The update check knows what it is running on.** The manifest now names a download for each
   of x64, ARM64 and 32 bit, and a copy is offered the one it can actually run. An ARM64 or 32
   bit copy used to be offered the x64 installer, which was the only download the manifest could
