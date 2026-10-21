@@ -8,6 +8,35 @@ Cutting a release means building the artifacts, hashing them, attaching them to 
 release and publishing the manifest the update check reads. Version numbers come from
 `Directory.Build.props` and nowhere else, so a release starts by bumping the two values there.
 
+## One command
+
+```powershell
+.\scripts\Release.ps1
+```
+
+That is the whole release. It checks that `gh` is signed in and that master is clean and up to
+date with origin, bumps the minor version and the version code, renames the `Unreleased`
+changelog heading to the new version, commits that and pushes it (the push runs the whole test
+suite once), builds ARM64, 32 bit and x64 without testing again, writes
+`dist\RELEASE_NOTES_v<version>.md` from the changelog with the hashes filled in, publishes the
+three, and pulls the manifest commit back. It stops before changing anything when the
+changelog has no `Unreleased` entries or the tag is already released.
+
+```powershell
+# A fix release, with a bold line at the top of the notes.
+.\scripts\Release.ps1 -Bump patch -Headline 'The line list keeps up again.'
+
+# Notes written by hand. A {{checksums}} line in them becomes the hash block.
+.\scripts\Release.ps1 -NotesFile notes\draft.md
+
+# Build and write the notes at the current version, with nothing committed or published.
+.\scripts\Release.ps1 -DryRun
+```
+
+`-Bump` takes `major`, `minor` (the default), `patch` or `none`. `-CertThumbprint` signs the
+builds, as below. When a publishing step fails part way, the builds and notes are still in
+`dist\`, and the sections below cover finishing by hand with `-SkipBuild`.
+
 ## Publishing a build
 
 ```powershell
@@ -35,12 +64,12 @@ under their own filenames. Build all three before publishing any of them, so the
 publishing run writes names every architecture rather than only the ones packaged so far.
 
 ```powershell
-.\scripts\Publish.ps1 -Publish -NotesFile dist
-otes.md
-.\scripts\Publish.ps1 -Publish -NotesFile dist
-otes.md -Runtime win-arm64
-.\scripts\Publish.ps1 -Publish -NotesFile dist
-otes.md -Runtime win-x86
+.\scripts\Publish.ps1 -Runtime win-arm64
+.\scripts\Publish.ps1 -Runtime win-x86
+.\scripts\Publish.ps1
+.\scripts\Publish.ps1 -Publish -SkipBuild -NotesFile dist\notes.md -Runtime win-arm64
+.\scripts\Publish.ps1 -Publish -SkipBuild -NotesFile dist\notes.md -Runtime win-x86
+.\scripts\Publish.ps1 -Publish -SkipBuild -NotesFile dist\notes.md
 ```
 
 The manifest carries a download per architecture under `architectures`, keyed `x64`, `arm64`

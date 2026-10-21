@@ -211,6 +211,12 @@ function Send-Manifest([string]$repo, $body)
 
     $body | ConvertTo-Json -Depth 4 | Set-Content -Path (Join-Path $clone 'latest.json') -Encoding utf8
     git -C $clone add latest.json
+    git -C $clone diff --cached --quiet
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "The manifest in $repo already says this." -ForegroundColor Yellow
+        Remove-Item $clone -Recurse -Force
+        return
+    }
     git -C $clone commit -m "chore(release): point the manifest at $version"
     if ($LASTEXITCODE -ne 0) { throw "Committing the manifest in $repo failed." }
     git -C $clone push
