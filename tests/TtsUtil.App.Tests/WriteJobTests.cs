@@ -60,6 +60,34 @@ public sealed class WriteJobTests : IDisposable
         });
     }
 
+    [Fact]
+    public async Task StopOnASavingTabCancelsTheSaveAndDeletesTheFile()
+    {
+        var engine = new HoldingEngine();
+        var window = CreateWindow(() => engine);
+        var path = Path.Combine(_root, "stopped.wav");
+
+        var write = _wpf.Invoke(() =>
+        {
+            window.InputText.Text = "Words that will not all be written.";
+            return window.WriteInBackgroundAsync(window.Documents[0], window.InputText.Text, path);
+        });
+        Assert.True(engine.Started.Wait(TimeSpan.FromSeconds(10)));
+        Assert.True(File.Exists(path));
+
+        _wpf.Invoke(() => window.StopButton.RaiseEvent(
+            new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent)));
+        await write;
+
+        Assert.False(File.Exists(path));
+        _wpf.Invoke(() =>
+        {
+            Assert.Equal("Stopped writing Text 1 and deleted stopped.wav.", window.StatusText.Text);
+            Assert.Empty(window.WriteJobs);
+            window.Close();
+        });
+    }
+
     private MainWindow CreateWindow(Func<ITtsEngine> engine) => _wpf.Invoke(() =>
     {
         var settings = AppSettings.LoadFrom(Path.Combine(_root, "settings.json"));
@@ -78,6 +106,30 @@ public sealed class WriteJobTests : IDisposable
         window.VoiceBox.SelectedIndex = 0;
         return window;
     });
+
+    private sealed class HoldingEngine : ITtsEngine
+    {
+        public ManualResetEventSlim Started { get; } = new(false);
+
+        public VoiceDescriptor Voice { get; } = new() { Name = "David", Source = VoiceSource.Windows };
+
+        public int SampleRate => 16000;
+
+        public int SpeakerCount => 1;
+
+        public void Synthesize(string text, int speakerId, float speed, SampleCallback onSamples,
+            CancellationToken cancellationToken)
+        {
+            onSamples(new float[SampleRate / 10]);
+            Started.Set();
+            cancellationToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(10));
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        public void Dispose()
+        {
+        }
+    }
 
     private sealed class FakeEngine : ITtsEngine
     {

@@ -199,6 +199,10 @@ first, so nothing is left waiting. Stop also remembers the line it cut off on, a
 on** button appears beside it that starts the reading again there rather than at the top. It
 goes away once the reading is picked up, or when you move to another document tab.
 
+When the tab in view is being saved to audio, Stop on the Text tab cancels that save instead
+and deletes the part written, so no cut off file is left behind. A reading carries on; press
+Stop again to end it too.
+
 **Pause when I click away**, beside **Read as I type**, holds the reading whenever another
 window takes over. It is off to begin with. Press Resume to carry on.
 

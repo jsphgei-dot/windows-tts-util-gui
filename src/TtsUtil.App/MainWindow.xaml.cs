@@ -1505,6 +1505,14 @@ public partial class MainWindow : Window
 
     private void OnStop(object sender, RoutedEventArgs e)
     {
+        // On the Text tab, Stop belongs to the tab in view when that tab is being saved.
+        if (ReferenceEquals(sender, StopButton) && ActiveDocument is { } document
+            && CancelWriteFor(document, deleteFile: true))
+        {
+            SetStatus($"Stopping the save of {document.Title}...");
+            return;
+        }
+
         StopRun("Stopping...");
         if (_stoppedAt is not null) SetStatus("Stopped. Carry on picks the reading up at that line.");
     }

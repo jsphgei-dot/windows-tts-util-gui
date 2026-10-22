@@ -71,13 +71,17 @@ public partial class MainWindow
         }, token));
     }
 
-    /// <summary>Stops a write and leaves the part written behind.</summary>
-    internal void CancelWriteFor(TextDocument document)
+    /// <summary>Stops a write, and deletes the part written when asked to.</summary>
+    internal bool CancelWriteFor(TextDocument document, bool deleteFile = false)
     {
-        foreach (var job in _writeJobs.Where(running => ReferenceEquals(running.Document, document)).ToList())
+        var jobs = _writeJobs.Where(running => ReferenceEquals(running.Document, document)).ToList();
+        foreach (var job in jobs)
         {
+            job.DeleteWhenStopped |= deleteFile;
             job.Cancellation.Cancel();
         }
+
+        return jobs.Count > 0;
     }
 
     private async Task FinishAsync(WriteJob job, Task<long> work)
@@ -99,7 +103,9 @@ public partial class MainWindow
         }
         catch (OperationCanceledException)
         {
-            SetStatus($"Stopped writing {job.Document.Title}.");
+            SetStatus(job.DeleteWhenStopped
+                ? DeletePartWritten(job)
+                : $"Stopped writing {job.Document.Title}.");
         }
         catch (Exception exception)
         {
@@ -111,6 +117,19 @@ public partial class MainWindow
             job.Cancellation.Dispose();
             LockBox(job.Document.Box, false);
             job.Document.Label.Text = job.Document.Title;
+        }
+    }
+
+    private static string DeletePartWritten(WriteJob job)
+    {
+        try
+        {
+            File.Delete(job.Path);
+            return $"Stopped writing {job.Document.Title} and deleted {Path.GetFileName(job.Path)}.";
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return $"Stopped writing {job.Document.Title}, but {Path.GetFileName(job.Path)} could not be deleted: {exception.Message}";
         }
     }
 
@@ -140,4 +159,6 @@ internal sealed class WriteJob
     public Task Work { get; set; } = Task.CompletedTask;
 
     public int Percent { get; set; }
+
+    public bool DeleteWhenStopped { get; set; }
 }
