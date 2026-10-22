@@ -3,7 +3,7 @@
 Newest first. Version codes are monotonic and never reused. The top section carries what is
 built but not yet released, and the release step renames it to the version going out.
 
-## Unreleased
+## 0.13.2-beta (version code 22)
 
 * **Stop cancels the save of the tab you are on.** Pressing Stop on the Text tab while the tab
   in view is being saved to audio now cancels that save and deletes the part written, rather
